@@ -6,6 +6,8 @@ using namespace std;
 
 string str;
 int cursor;
+stack<int> numbers;
+stack<char> acts;
 
 void deleteSpace(){
 	string newStr = "";
@@ -28,62 +30,59 @@ int getNum() {
 	return num;
 }
 
+void DoAct() {
+	char act;
+	int num1, num2, result = 0;
+
+	num1 = numbers.top();
+	numbers.pop();
+	num2 = numbers.top();
+	numbers.pop();
+	act = acts.top();
+	acts.pop();
+
+	if (act == '+')
+		result = num1 + num2;
+	else if (act == '-')
+		result = num2 - num1;
+	else if (act == '*')
+		result = num1 * num2;
+
+	numbers.push(result);
+}
+
+void DoIfBePriorityAct() {
+	if (!acts.empty() && acts.top() == '*') {
+		DoAct();
+	}
+}
+
 int main()
 {
 	cursor = 0;
 	getline(cin, str);
 	deleteSpace();
 	
-	stack<int> numbers;
-	stack<char> acts;
 	while (cursor < str.size()) {
 		if (str[cursor] >= '0' && str[cursor] <= '9') {
 			numbers.push(getNum());
-			if (!acts.empty() && acts.top() == '*') {
-				int num1, num2;
-
-				num1 = numbers.top();
-				numbers.pop();
-				num2 = numbers.top();
-				numbers.pop();
-				acts.pop();
-
-				numbers.push(num1 * num2);
-			}
+			DoIfBePriorityAct();
 		}
 		else {
 			if (str[cursor] == ')') {
-				while (!acts.empty() && acts.top() != '(') {
-					int num1, num2;
+				while (!acts.empty() && acts.top() != '(')
+					DoAct();
 
-					num1 = numbers.top();
-					numbers.pop();
-					num2 = numbers.top();
-					numbers.pop();
-					if (acts.top() == '+')
-						numbers.push(num1 + num2);
-					else if (acts.top() == '-')
-						numbers.push(num1 - num2);
-					acts.pop();
-				}
+				acts.pop();
 				cursor++;
+				DoIfBePriorityAct();
 			}else
 				acts.push(str[cursor++]);
 		}
 	}
-
+	
 	while (!acts.empty()) {
-		int num1, num2;
-
-		num1 = numbers.top();
-		numbers.pop();
-		num2 = numbers.top();
-		numbers.pop();
-		if (acts.top() == '+')
-			numbers.push(num1 + num2);
-		else if(acts.top() == '-')
-			numbers.push(num1 - num2);
-		acts.pop();
+		DoAct();
 	}
 
 	cout << numbers.top();
